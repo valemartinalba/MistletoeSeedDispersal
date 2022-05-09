@@ -1,0 +1,92 @@
+obs <- c(45.96,16.22,37.82,76.24,23.76,0)
+exp<-c(28.46,15.11,56.43,
+       44.42,41.14,14.44)
+exp.prop<-c(28.46/200,15.11/200,56.43/200,
+       44.42/200,41.14/200,14.44/200)
+Chi<-chisq.test(x = obs, p = exp.prop)
+Chi
+Chi$stdres
+sig<-0.05
+sigAdj<-sig/6 #corrección de bonferroni
+qnorm(sigAdj/2) #critical z value
+#valores de los residuos (stdres) por debajo de este
+#valor o por encima de su positivo muestran
+#diferencias significativas
+
+## calculo los intervalos de confianza (95%)
+a<-binom.test(as.integer(obs[1]),sum(obs),p=exp.prop[1]) #intervalo de confianza fio,alien
+a$conf.int[1]#lower
+a$conf.int[2]#upper
+b<-binom.test(as.integer(obs[2]),sum(obs),p=exp.prop[2]) #intervalo de confianza fio,native
+b$conf.int[1]#lower
+b$conf.int[2]#upper
+c<-binom.test(as.integer(obs[3]),sum(obs),p=exp.prop[3]) #intervalo de confianza zor,alien
+c$conf.int[1]#lower
+c$conf.int[2]#upper
+d<-binom.test(as.integer(obs[4]),sum(obs),p=exp.prop[4]) #intervalo de confianza zor,native
+d$conf.int[1]#lower
+d$conf.int[2]#upper
+e<-binom.test(as.integer(obs[5]),sum(obs),p=exp.prop[5]) #intervalo de confianza zor,native
+e$conf.int[1]#lower
+e$conf.int[2]#upper
+f<-binom.test(as.integer(obs[6]),sum(obs),p=exp.prop[6]) #intervalo de confianza zor,native
+f$conf.int[1]#lower
+f$conf.int[2]#upper
+
+yminus=c(a$conf.int[1],b$conf.int[1],c$conf.int[1],d$conf.int[1],e$conf.int[1],f$conf.int[1])*sum(obs)
+yminus
+yplus=c(a$conf.int[2],b$conf.int[2],c$conf.int[2],d$conf.int[2],e$conf.int[2],f$conf.int[2])*sum(obs)
+yplus
+
+### PLOT ##########################
+### BLANCO Y NEGRO ################
+library(Hmisc)
+par(mar = c(4, 5, 1, 2),xpd=T)
+barplot(c(obs[1],exp[1],obs[2],exp[2],
+          obs[3],exp[3],obs[4],exp[4],
+          obs[5],exp[5],obs[6],exp[6]),
+        space=c(1,0,0.5,0,0.5,0,1.5,0,0.5,0,0.5,0),
+        col="grey50",
+        density=c(100,50,100,50,100,50,100,50,100,50,100,50),
+        angle=c(90,0,90,0,90,0,90,0,90,0,90,0),
+        ylab="Percentage of substrate"
+        ,ylim=c(0,90)
+)
+
+mtext(text=c("H","NH","BS","H","NH","BS"),side=1,line=0.25,at=c(2,4.5,7,10.5,13,15.5),font=1)
+mtext(text="Chilean matorral",side=1,line=1.5,at=4.5,font=1)
+mtext(text="Temperate forest",side=1,line=1.5,at=13,font=1)
+
+## agrego los intervalos de confianza
+errbar(c(1.5,4,6.5,10,12.5,15),c(obs[1],obs[2],obs[3],obs[4],obs[5],obs[6]),
+       yplus,
+       yminus,add=T,lty=1,col="black",pch=3,cex=0)
+text(c(1.5,4,6.5,10,12.5,15),yplus+5,labels=c("*","","*","*","*","*"))
+
+### PLOT ##########################
+### COLOR ################
+par(mar = c(4, 5, 1, 2),xpd=T)
+barplot(c(obs[1],exp[1],obs[2],exp[2],
+          obs[3],exp[3],obs[4],exp[4],
+          obs[5],exp[5],obs[6],exp[6]),
+        space=c(1,0,0.5,0,0.5,0,1.5,0,0.5,0,0.5,0),
+        col=c("darkgreen","darkgreen","blue","blue","red","red"),
+        density=c(100,50,100,50,100,50,100,50,100,50,100,50),
+        angle=c(90,0,90,0,90,0,90,0,90,0,90,0),
+        ylab="Percentage of substrate"
+        ,ylim=c(0,90)
+)
+
+mtext(text=c("H","NH","BS","H","NH","BS"),side=1,line=0.25,at=c(2,4.5,7,10.5,13,15.5),font=1)
+mtext(text="Chilean matorral",side=1,line=1.5,at=4.5,font=1)
+mtext(text="Temperate forest",side=1,line=1.5,at=13,font=1)
+
+## agrego los intervalos de confianza
+errbar(c(1.5,4,6.5,10,12.5,15),c(obs[1],obs[2],obs[3],obs[4],obs[5],obs[6]),
+       yplus,
+       yminus,add=T,lty=1,col="black",pch=3,cex=0)
+text(c(1.5,4,6.5,10,12.5,15),yplus+5,labels=c("*","","*","*","*","*"))
+
+legend(10.8,90,cex=1.1,legend=c("Host plants","Non-host plants","bare soil"),
+       fill=c("darkgreen","blue","red"),
+       box.lty=0)
