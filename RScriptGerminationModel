@@ -1,0 +1,108 @@
+library("tidyverse")
+#library("dplyr")
+library(readxl)
+
+datosgermi<-read.table(file.choose(),header=T)
+datosgermi <- read_excel("datosgermi.xlsx")
+str(datosgermi)
+
+datos=datosgermi
+
+datos$trat <- factor(datos$trat, levels=c("control","handcleaned", "dispersor")) 
+levels(datos$trat)<-c("Control", "handcleaned", "defecated") 
+
+### Temperate forest ##############################
+data_bosque<-filter(datos, bioma == "TF")
+data_bosque<-subset(datos,bioma == "TF")
+
+datosTF<-data_bosque
+
+#------------------------------------------------------------------------------------------------
+
+germdata<-datosTF %>% 
+  group_by(dish,trat) %>% 
+  tally(status)
+
+a<-datosTF %>% 
+  group_by(dish) %>% 
+  count()  # esto me calcula la cantidad de semillas totales por placa
+
+germdata$germ<-germdata$n  #germ van a ser la cantidad de semillas germinadas por placa
+germdata$nogerm<-a$n-germdata$n #nogerm son las no-germinadas; que las calculamos como el número de 
+                                #semillas totales (a) menos la germinadas
+germdata$prop<-germdata$germ/a$n #calculo la proporci?n de semillas germinadas por placa
+germdata$prop
+
+germres<-germdata %>% 
+  group_by(trat) %>% 
+  summarise(mean = mean(prop*100), sd = sd(prop*100), se = sd(prop*100) / length(prop*100))
+germres #aca tengo la media (en porcentaje) y los desvios
+
+###--------PLANTEO MODELO BINOMIAL. Vbe rta: proporci?n de semillas germinadas------------------
+germdata$treatment=as.factor(germdata$trat)
+
+m1<-glm((cbind(germ,nogerm))~trat, family=binomial, data=germdata)
+summary(m1)
+#Test a posteriori para ver dif entre tratamientos
+library("multcomp")
+m1post<-glht(m1,linfct=mcp(trat="Tukey"),adjust.method="fdr")
+summary(m1post)
+
+### Chilean matorral ###############################
+data_matoral<-filter(datos, bioma == "MC")
+
+datosMC<-data_matoral
+
+#------------------------------------------------------------------------------------------------
+
+germdata<-datosMC %>% 
+  group_by(dish,trat) %>% 
+  tally(status) #hago que me muestre cuantas semillas germinadas hay por placa
+
+a<-datosMC %>% 
+  group_by(dish) %>% 
+  count()  # esto me calcula la cantidad de semillas totales por placa
+
+germdata$germ<-germdata$n  #germ van a ser la cantidad de semillas germinadas por placa
+germdata$nogerm<-a$n-germdata$n #nogerm son las no-germinadas; que las calculamos como el n?mero de 
+#semillas totales (a) menos la germinadas
+germdata$prop<-germdata$germ/a$n #calculo la proporci?n de semillas germinadas por placa
+germdata$prop
+
+germres<-germdata %>% 
+  group_by(trat) %>% 
+  summarise(mean = mean(prop*100), sd = sd(prop*100), se = sd(prop*100) / length(prop*100))
+germres #aca tengo la media (en porcentaje) y los desvios
+
+###--------PLANTEO MODELO BINOMIAL. Vbe rta: proporci?n de semillas germinadas------------------
+germdata$treatment=as.factor(germdata$trat)
+
+m2<-glm((cbind(germ,nogerm))~trat, family=binomial, data=germdata)
+summary(m2)
+#Test a posteriori para ver dif entre tratamientos
+library("multcomp")
+m2post<-glht(m2,linfct=mcp(trat="Tukey"),adjust.method="fdr")
+summary(m2post)
+
+####################################################
+### PLOTS ##########################################
+####################################################
+
+par(mar = c(4.5, 5, 1, 1))
+barplot(c(germres$mean),
+        col=c("black","white","brown"),
+        ylab="Germinated seeds (%)",
+        ylim=c(0,100),
+        xpd=T)
+errbar(c(0.7,1.9,3.1),
+       germres$mean,
+       germres$mean+germres$se,
+       germres$mean-germres$se,
+       add=T,lty=1,col="black",pch=3,cex=0)
+#mtext(text="Control",side=1,line=0.5,at=0.7,pos=1,srt=45)
+#mtext(text="Hand-cleaned",side=1,line=0.5,at=1.9)
+#mtext(text="Defecated",side=1,line=0.5,at=3.1)
+text(0.85,-5,labels="Control",srt=45,xpd=T,pos=2)
+text(2.05,-5,labels="Hand-cleaned",srt=45,xpd=T,pos=2)
+text(3.25,-5,labels="Defecated",srt=45,xpd=T,pos=2)
+
